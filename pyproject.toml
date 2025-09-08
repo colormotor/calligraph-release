@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "calligraph"
+version = "0.1"
+description = "Smoothing B-sp;ines with DiffVG"
+readme = { file = "README.md", content-type = "text/markdown" }
+license = { text = "GPL-3.0" }
+authors = [{ name = "Daniel Berio", email = "daniel.berio@gold.ac.uk" }]
+requires-python = ">=3.9"
+dependencies = [
+  "numpy",
+  "pillow",
+  "scipy",
+  "pyclipper",
+  "easydict",
+  "svgpathtools",
+  "matplotlib",
+]
+
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["calligraph*"]
