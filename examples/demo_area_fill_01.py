@@ -16,7 +16,7 @@ from calligraph import (
     config,
     util,
     walks,
-    files,
+    fs,
     diffvg_utils,
     imaging,
     stroke_init,
@@ -50,7 +50,7 @@ def params():
     alpha = 1  # 0.5 #0.5 #0.5 # 1.0 #0.5 #0.5
     image_alpha = 0.5
 
-    output_path = "/home/danielberio/Dropbox/transfer_box/data/calligraph/outputs/"
+    output_path = "./outputs/"
     style_img = "./data/chinese.jpg"
     # style_img = "./data/style-picasso-1.jpg"
     # style_img = "/home/danielberio/Dropbox/transfer_box/data/calligraph/pat5.jpg"
@@ -116,7 +116,6 @@ if cfg.text:
         font_path=cfg.font,
     )
     img = np.array(input_img) / 255
-
 else:
     input_img = Image.open(cfg.image_path).convert("L").resize((cfg.size, cfg.size))
 
