@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from . import geom, segmentation, strokify, planning, imaging
+from . import geom, segmentation, imaging
 from easydict import EasyDict as edict
 import numpy as np
 import pdb
@@ -68,100 +68,6 @@ def init_paths_random(img, n, num_ctrl, sigma=2.5, k=7, tau=0.2, use_attention=T
                       edges=edges))
     
 
-    #
-def init_paths(img, n=5, join_thresh=100, simplify_eps=1.5, sigma=2.5, k=7,
-               width_range=None,
-               relevance_thresh=2.5**2,
-               saliency=None, get_data=False,
-               thresh_img=None, contours=False):
-    if saliency is None:
-        saliency = segmentation.clip_saliency(img) #painter.input_img)
-    if thresh_img is None:
-        segments = segmentation.find_segments(img, 'instance')
-        if not segments:
-            print("found no objects attempting panoptic seg")
-            segments = segmentation.find_segments(img, 'panoptic')
-    else:
-        segments = []
-    if segments:
-        masks = [seg['visual_mask'] for seg in segments]
-        edges = 1-segmentation.xdog(img, sigma=sigma, k=7) #2.5, k=7)
-    else:
-        if thresh_img is not None:
-            edges = (1-np.array(thresh_img.convert('L'))/255)
-        else:
-            thresh_img = (1-np.array(img.convert('L'))/255)
-            edges = 1-segmentation.xdog(thresh_img, sigma=sigma, k=k)
-        masks = [np.ones(edges.shape[:2])]
-
-    w, h = img.size
-    rect = geom.make_rect(0, 0, w, h)
-
-    im = np.array(img)
-    paths = []
-    for mask in masks:
-        mask = imaging.morpho_dilate(np.array(mask), iterations=1)
-        masked = edges*mask
-        #masked = filters.gaussian(masked, 2.0)
-        #masked = imaging.morpho_open(masked, iterations=1)
-        # masked = imaging.morpho_dilate(masked, iterations=1)
-        if not contours:
-            if width_range is not None:
-                strokes = strokify.incremental_strokify_binary_map((masked).astype(bool), width_range,
-                                                                   relevance_thresh=relevance_thresh,
-                                                                   max_strokes=n)
-            else:
-                strokes = strokify.strokify_binary_map((masked).astype(bool))
-        else:
-            strokes = imaging.find_contours((masked*255).astype(np.uint8)) #.astype(bool))
-            strokes = [geom.close(P) for P in strokes]
-            strokes = [np.hstack([P, np.ones((len(P), 1))]) for P in strokes]
-        strokes = [s for s in strokes if len(s) > 1]
-        if not strokes:
-            continue
-
-        if join_thresh > 0 and len(strokes) > 1:
-            # print("Joining %d strokes"%len(strokes))
-            strokes = planning.sort_paths(strokes, join_thresh=join_thresh) #100)
-        # print('Simplifying strokes')
-        strokes = strokify.simplify_strokes(strokes, simplify_eps, perimeter=w)
-        strokes = [s for s in strokes if len(s) > 1]
-        #strokes = spray.simplify_strokes(strokes)
-        if not strokes:
-            continue
-
-        # print('Computing saliencies and sorting')
-        saliencies = []
-        for stroke in strokes:
-            stroke = np.array(stroke)
-            box = geom.bounding_box(stroke[:,:2])
-            if np.max(geom.rect_size(box)) > 512:
-                print("Stroke too long?")
-                print(len(stroke))
-                print(geom.chord_length(stroke[:,:2]))
-                continue
-
-            stroke = strokify.smooth_stroke(stroke, ds=1, degree=1)
-            sim = strokify.raster_stroke_for_image(stroke, im)/255
-            #sal = saliency*sim # softmax(sal*sim)
-            #s = np.mean(sim) #
-
-            s = np.mean(saliency[sim > 0])
-
-            saliencies.append(s*geom.chord_length(stroke[:,:2]))
-            #plt.imshow(sal*sim)
-            #print(im.dtype, im.shape)
-            #break
-        saliencies = np.array(saliencies)
-        I = np.argsort(saliencies)[::-1][:n]
-        saliencies = [saliencies[i] for i in I]
-        paths += [strokes[i] for i in I]
-    if get_data:
-        return edict(dict(paths=paths,
-                         saliency=saliency,
-                         edges=edges,
-                         segments=segments))
-    return paths
 
 
 def init_path_tsp(img, n, nb_iter=30, mask=None, startup_w=None, minutes_limit=1/30, **kwargs):

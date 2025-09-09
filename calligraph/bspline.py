@@ -25,8 +25,7 @@ def add_multiplicity(Q, multiplicity, noise=0.0):
 
 def keypoint_times(P, t, k, mult=1, closed=False):
     p = k-1
-    if endpoint_tangents is None or not endpoint_tangents:
-        endpoint_tangents = [None, None]
+
     if closed:
         o = k/2 - np.floor(k/2)
         kt = np.linspace(t[p]-o+1, t[-k]-o, len(P))
@@ -270,11 +269,8 @@ def compute_smoothing_bspline(Q, mult=1, der=3, k=6, r=1000, sigma=1.0,
             #K[-half_offset*dim:, -half_offset*dim:] = np.eye(half_offset*dim)
         else:
             p1 = (p)*dim
-            if endpoint_tangents[0] is not None:
-                 p1 += dim
             p2 = (p)*dim
-            if endpoint_tangents[1] is not None:
-                 p2 += dim
+
             K = np.zeros((p1+p2, n*dim))
             K[:p1, :p1] = np.eye(p1) #p*dim)
             K[-p2:, -p2:] = np.eye(p2) #p*dim)

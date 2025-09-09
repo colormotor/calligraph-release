@@ -15,15 +15,13 @@ from calligraph import (
     dce,
     config,
     util,
-    walks,
-    files,
+    fs,
     diffvg_utils,
     imaging,
     stroke_init,
     segmentation,
     spline_losses,
     image_losses,
-    contour_histogram,
 )
 
 
@@ -32,15 +30,19 @@ dtype = torch.float32
 
 
 def params():
+    verbose = 0
+
     text = "A"  # If an empty string load an image instead
     size = 512
     padding = 25
-    font = "./data/NoamText-Bold.ttf"
+    font = "./data/fonts/Bradley Hand Bold.ttf"
+    image_path = "./data/spock.jpg"
+
     minw, maxw = 0.5, 7  # stroke width range
     degree = 5  # Spline degree
     deriv = 3  # Smoothing derivative order
     multiplicity = 1  # Keypoint multiplicity
-    b_spline = False  # Use B-splines
+    b_spline = True  # Use B-splines
 
     fill = 0
     closed = False
@@ -50,7 +52,7 @@ def params():
     alpha = 1  # 0.5 #0.5 #0.5 # 1.0 #0.5 #0.5
     image_alpha = 0.5
 
-    output_path = "/home/danielberio/Dropbox/transfer_box/data/calligraph/outputs/"
+    output_path = "./outputs/"
     style_img = "./data/chinese.jpg"
     # style_img = "./data/style-picasso-1.jpg"
     # style_img = "/home/danielberio/Dropbox/transfer_box/data/calligraph/pat5.jpg"
@@ -72,7 +74,7 @@ def params():
     num_opt_steps = 300  # 500
 
     # Loss weights
-    smoothing_w = 1
+    smoothing_w = 0.1
     use_clipag = 1
     style_w = 1.0
     overlap_w = 0  # 1000.0
@@ -116,16 +118,16 @@ if cfg.text:
         font_path=cfg.font,
     )
     img = np.array(input_img) / 255
-
 else:
     input_img = Image.open(cfg.image_path).convert("L").resize((cfg.size, cfg.size))
 
     img = np.array(input_img) / 255
     img = segmentation.xdog(img, sigma=2.5, k=7)
 
-
 h, w = img.shape
 
+style_img = Image.open(cfg.style_img).convert('L') #.resize((512, 512)) #224, 244)) #resize((cfg.size, cfg.size))
+target_img = 1-(1.0-img)*(cfg.alpha*cfg.image_alpha)
 
 def add_multiplicity(Q, noise=0.0):
     Q = np.kron(Q, np.ones((cfg.multiplicity, 1)))
@@ -134,7 +136,7 @@ def add_multiplicity(Q, noise=0.0):
 
 ##############################################
 # Settings
-background_image = np.ones(h, w)
+background_image = np.ones((h, w))
 
 ##############################################
 # Initialization paths
@@ -199,7 +201,6 @@ else:
 
 scene = diffvg_utils.Scene()
 
-paths = []
 fill_color = None
 
 if cfg.fill:
@@ -227,12 +228,6 @@ for Pw in startup_paths:
         fill_color=fill_color,
         split_primitives=True,
     )
-    paths.append(path)
-        stroke_color=([cfg.alpha], False),
-        fill_color=fill_color,
-        split_primitives=True,
-    )
-    paths.append(path)
 
 
 ##############################################
@@ -251,13 +246,13 @@ schedulers = [util.step_cosine_lr_scheduler(opt, 0.0, 0.2, cfg.num_opt_steps)
 ##############################################
 # Losses
 
-losses = util.MultiLoss(verbose=verbose)
+losses = util.MultiLoss(verbose=cfg.verbose)
 # mse = image_losses.MSELoss(rgb=False, blur=3)
 mse = image_losses.MultiscaleMSELoss(rgb=False)
 losses.add('mse',
            mse, cfg.mse_w)
 
-if cfg.degree > 3: # b_spline:
+if cfg.degree > 3 and cfg.b_spline:
     losses.add('deriv',
                spline_losses.make_deriv_loss(cfg.deriv, 1), cfg.smoothing_w)
 
@@ -301,7 +296,7 @@ def frame(step):
        opt.zero_grad()
 
     # Rasterize
-    with util.perf_timer('render', verbose=verbose):
+    with util.perf_timer('render', verbose=cfg.verbose):
         im = scene.render(background_image, num_samples=2)[:,:,0].to(device)
 
     im_no_gamma = im
@@ -311,7 +306,7 @@ def frame(step):
     # Losses
     # Note that if loss is not added or weight is 0 it is not computed
     loss = losses(
-        mse=(im_no_gamma, target_tensor, 0.5),
+        mse=(im_no_gamma, target_img, 1.0),
         offset=(scene.shapes,),
         deriv=(scene.shapes,),
         overlap=(im_no_gamma, scene.shapes,),
@@ -320,7 +315,7 @@ def frame(step):
         bbox=(scene.shapes,),
     )
 
-    with util.perf_timer('Opt step', verbose=verbose):
+    with util.perf_timer('Opt step', verbose=cfg.verbose):
         loss.backward()
         for opt in optimizers:
             opt.step()
@@ -329,7 +324,7 @@ def frame(step):
 
     # Constrain
     with torch.no_grad():
-        for path in paths:
+        for path in scene.shapes:
             path.param('stroke_width').data.clamp_(cfg.minw, cfg.maxw)
             path.param('stroke_width').data[0] = cfg.minw
             path.param('stroke_width').data[-1] = cfg.minw
