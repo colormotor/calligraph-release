@@ -1036,6 +1036,25 @@ def is_point_in_shape(p, S, get_flags=False):
     return res
 
 
+def select_convex_vertex(P, area=None):
+    ''' Select convex vertex (with arbitrary winding)'''
+    if area is None:
+        area = polygon_area(P)
+    n = len(P)
+    maxh = 0
+    verts = []
+    for v in range(n):
+        a, b = (v-1)%n, (v+1)%n
+        if angle_between(P[v] - P[a], P[b] - P[v])*area > 0:
+            h = point_line_distance(P[v], P[a], P[b])
+            if h > maxh:
+                maxh = h
+                verts.append(v)
+    if not verts:
+        return None
+    return verts[-1]
+
+
 def get_point_in_polygon(P, area=None):
     ''' Get a point inside polygon P
         if P is a tuple (S, i), P=S[i] and test considers multiple shape contours

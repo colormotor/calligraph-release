@@ -61,10 +61,10 @@ def files_in_dir(path, exts=[], nohidden=True):
                 exts = [exts]
             for ext in exts:
                 if file.endswith(ext):
-                    fs.append(os.path.join(path, file))
+                    files.append(os.path.join(path, file))
                     break
         else:
-            fs.append(os.path.join(path, file))
+            files.append(os.path.join(path, file))
 
     return files
 
