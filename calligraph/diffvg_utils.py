@@ -949,7 +949,7 @@ class SmoothingBSpline(Path):
         self.multiplicity = multiplicity
         self.point_offsets = None
         self.width_func = width_func
-        self.endpoint_tangents = endpoint_tangents
+        
         self.pspline_weight = pspline_weight
         self.pspline = pspline
         self.init_smooth_params = init_smooth_params
@@ -999,7 +999,7 @@ class SmoothingBSpline(Path):
                                k,
                                mult,
                                closed=self.closed,
-                               endpoint_tangents=self.endpoint_tangents,
+                               
                                clamped=self.clamped)
         t = torch.tensor(t, device=device, dtype=P.dtype)
         self.kt = kt
@@ -1137,7 +1137,7 @@ class SmoothingBSpline(Path):
     def to_dict(self):
         d = super().to_dict()
         d.update({'spline_degree': self.spline_degree,
-                  'endpoint_tangents': self.endpoint_tangents,
+                  
                   'closed':self.closed,
                   'multiplicity': self.multiplicity,
                   'Cp3': self.Cp3.detach().cpu().numpy(),

@@ -21,7 +21,7 @@ def make_deriv_loss(deriv, ref_size=1.0, dimensionless=False, log=False):
 
         c = 0
         for stroke in paths:
-            if isinstance(stroke, diffvg_utils.DynamicBSpline):
+            if isinstance(stroke, diffvg_utils.SmoothingBSpline):
                 d = stroke.inner(deriv, normalize_size=ref_size)[0,0]
                 a, b = stroke.domain()
                 T = (b - a)
@@ -107,7 +107,7 @@ def make_bending_loss(subd):
         for path in shapes:
             Q = path.param('points')
 
-            if type(path) == diffvg_utils.DynamicBSpline:
+            if type(path) == diffvg_utils.SmoothingBSpline:
                 u = np.linspace(*path.domain(), len(Q)*subd)[2:-2]
             else:
                 u = np.linspace(0, 1, subd)

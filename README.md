@@ -22,20 +22,20 @@ It is recommended to create a new environment to install the dependencies, which
 
 Then proceed with the following dependencies. In practice I think torch installs scipy/numpy/matplotlib, but it might be useful to install these first with
 
-    mamba install numpy scipy matplotlib
+    mamba install numpy scipy matplotlib opencv scikit-image
 
 making sure your environment is active.
 
 
 ## Dependencies
 
--   Install NumPy, SciPy, matplotlib, OpenCV
+-   Install NumPy, SciPy, matplotlib, OpenCV (using mamba or pip)
 -   Install [torch/torchvision](https://pytorch.org/get-started/locally/) following your system specs
 -   Install DiffVg from the [colormotor branch](https://github.com/colormotor/diffvg) (has thick strokes fix)
     -   Clone the Diffvg repo then from the directory do:
         -   `git submodule update --init --recursive` and then
         -   `python setup.py install`
--   Install ftfy `mamba install ftfy`
+-   `pip install accelerate transformers diffusers ortools open-clip-torch`
 
 
 <a id="org30cfaee"></a>

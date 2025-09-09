@@ -812,7 +812,6 @@ def image_augmentation_clip(size, args=["Af", "Ji"]):
 
 def load_clip_model(model_name):
     import open_clip
-    import clip
 
     if model_name in cfg.clip_models:
         print(model_name, "already loaded")
@@ -858,7 +857,7 @@ def load_clip_model(model_name):
     model, _, preprocess = open_clip.create_model_and_transforms(model_name,
                                                                             pretrained=pretrained,
                                                                             precision="amp",
-                                                                            load_weights_only=False, # Breaks otherwise
+                                                                            weights_only=False, # Breaks otherwise
                                                                             device=device)
     try:
         input_size = preprocess.transforms[0].size[0]

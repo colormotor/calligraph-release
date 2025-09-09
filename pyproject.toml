@@ -18,9 +18,9 @@ dependencies = [
   "easydict",
   "svgpathtools",
   "matplotlib",
+  "cssutils",
+  "tqdm"
 ]
-
-
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["calligraph*"]
