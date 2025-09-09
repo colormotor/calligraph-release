@@ -9,51 +9,42 @@ The ideal way to get this working is installing the conda/mamba package manager 
     curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
     bash Miniforge3-$(uname)-$(uname -m).sh
 
-Say &ldquo;yes&rdquo; to everything during the installation process and restart the terminal
-when done.
-
-On Windows open [this link](https://github.com/conda-forge/miniforge) and download the first Windows, x86<sub>64</sub> installer that
-appears in the lists. Again &ldquo;Say yes to everything&rdquo;. This will install a
-&ldquo;Miniforge Prompt&rdquo; application that you can use to install dependencies.
-
 It is recommended to create a new environment to install the dependencies, which can be done with
+ 
+    mamba create -n calligraph python=3.10
+    
+You can replace `calligraph` with any name of your preference. Activate the env:
 
-    mamba create -n yourenvname python=3.10
+    mamba activate calligraph
 
-Then proceed with the following dependencies. In practice I think torch installs scipy/numpy/matplotlib, but it might be useful to install these first with
+Then proceed with the following dependencies. If using conda/mamba you may want to install these beforehand:
 
     mamba install numpy scipy matplotlib opencv scikit-image
 
 making sure your environment is active.
 
-
 ## Dependencies
-
--   Install NumPy, SciPy, matplotlib, OpenCV (using mamba or pip)
--   Install [torch/torchvision](https://pytorch.org/get-started/locally/) following your system specs
--   Install DiffVg from the [colormotor branch](https://github.com/colormotor/diffvg) (has thick strokes fix)
-    -   Clone the Diffvg repo then from the directory do:
+-   Install NumPy, SciPy, matplotlib, OpenCV (using mamba as above or pip)
+-   Install [torch/torchvision](https://pytorch.org/get-started/locally/)
+    following your system specs
+-   Install DiffVg from the [colormotor branch](https://github.com/colormotor/diffvg) (has thick strokes fix):
+    -   clone the repo: `git clone https://github.com/colormotor/diffvg.git`
+    -   From the repo directory do:
         -   `git submodule update --init --recursive` and then
         -   `python setup.py install`
--   `pip install accelerate transformers diffusers ortools open-clip-torch`
+-   Install remaining deps with pip:
+    - `pip install accelerate transformers diffusers ortools open-clip-torch`
 
 
-<a id="org30cfaee"></a>
-
-### Optional
-
--   Install [geomloss](https://www.kernel-operations.io/geomloss/) to test Geometric Loss (Sinkhorn)
-
-
-<a id="org5c2e1d9"></a>
-
-## Install
+## Install locally
 
 Finally, install locally from the repo directory with
 
     pip install -e .
 
 
-<a id="org305a34e"></a>
-
 # Examples
+
+Examples are located in the [examples](./examples) directory. By default the outputs are saved in an outputs directory. If this direcory does not exist the outut will not be saved. that will be automatically created. If this directory does not exist, no output is saved. In each example, configuration parameters are set by adding local variables to a `params()` function. These are automatically converted to command-line arguments that can be set when executing a script. 
+
+
